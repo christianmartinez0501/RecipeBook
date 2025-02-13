@@ -10,13 +10,13 @@ body {
     max-width: 600px;
     margin: auto;
     padding: 20px;
-    background-color: #ffffff; /* White background for content */
+    background-color: #ffffff; 
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
-    color: #b05c2e; /* Warm orange for headings */
+    color: #b05c2e;
     text-align: center;
 }
 
@@ -35,7 +35,7 @@ textarea,
 input[type="file"] {
     width: 100%;
     padding: 10px;
-    border: 1px solid #e0d6c0; /* Light border */
+    border: 1px solid #e0d6c0; 
     border-radius: 5px;
     box-sizing: border-box; /* Ensures padding is included in total width */
 }
@@ -56,6 +56,61 @@ button {
     width: 100%;
 }
 
-button:hover {
+#add-button button:hover {
     background-color: #9d4e24; /* Darker shade on hover */
+}
+
+.menu-container {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+
+.recipe-card {
+    position: relative; 
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    margin-bottom: 15px;
+    background: white;
+}
+
+.menu-button {
+    background: none;
+    border: none;
+    color: #4b3c2a;
+    font-size: 24px;
+    cursor: pointer;
+    transform: rotate(90deg); 
+}
+
+.menu-options {
+    display: none;
+    position: absolute;
+    right: 10px;
+    top: 30px;
+    background: #f0eeee;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    padding: 5px;
+    min-width: 80px;
+}
+
+.menu-options button {
+    display: block;
+    color:black;
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 14px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.menu-options button:hover {
+    background: rgba(0, 0, 0, 0.05);
 }

@@ -82,6 +82,7 @@ def get_recipes():
 def get_image(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
+# Delete recipe
 @app.route('/delete_recipe/<int:recipe_id>', methods=['DELETE'])
 def delete_recipe(recipe_id):
     with sqlite3.connect(DATABASE) as conn:
@@ -89,6 +90,28 @@ def delete_recipe(recipe_id):
         cursor.execute("DELETE FROM recipes WHERE id = ?", (recipe_id,))
         conn.commit()
     return jsonify({"message": "Recipe deleted successfully"}), 200
+
+# Update an existing recipe
+@app.route('/update_recipe/<int:recipe_id>', methods=['PUT'])
+def update_recipe(recipe_id):
+    data = request.get_json()  # Get JSON data from the request
+
+    title = data.get("title")
+    ingredients = data.get("ingredients")
+    instructions = data.get("instructions")
+
+    if not title or not ingredients or not instructions:
+        return jsonify({"message": "All fields are required!"}), 400
+
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE recipes SET title=?, ingredients=?, instructions=? WHERE id=?",
+            (title, ingredients, instructions, recipe_id)
+        )
+        conn.commit()
+
+    return jsonify({"message": "Recipe updated successfully!"})
 
 if __name__ == "__main__":
     app.run(debug=True)
