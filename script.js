@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
     const recipeForm = document.getElementById("recipeForm");
-    let currentRecipeId = null;
 
     // Handle the form submission
     recipeForm.addEventListener("submit", function (event) {
@@ -72,19 +71,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
         // Function to edit a recipe by ID
-        window.editRecipe = function editRecipe(recipeId, title, ingredients, instructions, menuID) {
+        window.editRecipe = function editRecipe(recipeId, title, ingredients, instructions) {
             // console.log("Opening edit modal for Recipe ID:", recipeId); 
             const modal = document.getElementById("editModal");
-            
-            //hide the three dot menu
-            const menu = document.getElementById(menuID)
-            if(menu) menu.style.display = "none";
 
             document.getElementById("editTitle").style.value = title;
             document.getElementById("editIngredients").style.value = ingredients;
             document.getElementById("editInstructions").style.value = instructions;
             currentRecipeId = recipeId;
 
+            
             modal.style.display = "block"; // Make modal visible
         };
             
@@ -99,7 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const newIngredients = document.getElementById("editIngredients").value;
             const newInstructions = document.getElementById("editInstructions").value;
     
-            fetch(`http://127.0.0.1:5000/edit_recipe/${currentRecipeId}`, {
+            fetch(`http://127.0.0.1:5000/edit_recipe/${recipeID}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json"},
                 body: JSON.stringify({
@@ -111,7 +107,7 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(data => {
                 alert(data.message);
-                document.getElementById("editModal").style.display = "none";
+                closeEditModal();
                 fetchRecipes();
             })
             .catch(error => console.error("Error editing recipe figure it out! :)", error));
@@ -127,8 +123,10 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .catch(error => console.error("Error deleting recipe:", error));
     };
+    // Close modal function
+    window.closeEditModal = function() {
+        document.getElementById("editModal").style.display = "none";
+    };
     fetchRecipes(); 
 });
-test
-hekhfwe
-asdpfjsdf
+
