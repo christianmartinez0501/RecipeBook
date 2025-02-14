@@ -31,7 +31,18 @@
             </div>
         </form>
         <h2>Saved Recipes</h2>
-        <div id="recipeList"></div>     
+        <div id="recipeList"></div>
+        <!-- Edit Recipe Modal -->
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Edit Recipe</h2>
+                <input type="text" id="editTitle" placeholder="New Title">
+                <input type="text" id="editIngredients" placeholder="New Ingredients">
+                <textarea id="editInstructions" placeholder="New Instructions"></textarea>
+                <button id="saveEdit">Save Changes</button>
+            </div>
+        </div>     
     </div>
     <script src="script.js"></script>
 </body>

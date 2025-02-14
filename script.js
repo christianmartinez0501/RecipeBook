@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
     const recipeForm = document.getElementById("recipeForm");
+    let currentRecipeId = null;
 
     // Handle the form submission
     recipeForm.addEventListener("submit", function (event) {
@@ -70,6 +71,52 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => console.error("Error fetching recipes:", error));
     }
 
+        // Function to edit a recipe by ID
+        window.editRecipe = function editRecipe(recipeId, title, ingredients, instructions, menuID) {
+            // console.log("Opening edit modal for Recipe ID:", recipeId); 
+            const modal = document.getElementById("editModal");
+            
+            //hide the three dot menu
+            const menu = document.getElementById(menuID)
+            if(menu) menu.style.display = "none";
+
+            document.getElementById("editTitle").style.value = title;
+            document.getElementById("editIngredients").style.value = ingredients;
+            document.getElementById("editInstructions").style.value = instructions;
+            currentRecipeId = recipeId;
+
+            modal.style.display = "block"; // Make modal visible
+        };
+            
+        // Open edit modal with recipe data
+        document.querySelector(".close").click = function () {
+            document.getElementById("editModal").style.display = "none"
+        };
+    
+        // Save edited recipe
+        document.getElementById("saveEdit").onclick = function () {
+            const newTitle = document.getElementById("editTitle").value;
+            const newIngredients = document.getElementById("editIngredients").value;
+            const newInstructions = document.getElementById("editInstructions").value;
+    
+            fetch(`http://127.0.0.1:5000/edit_recipe/${currentRecipeId}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json"},
+                body: JSON.stringify({
+                    title: newTitle,
+                    ingredients: newIngredients,
+                    instructions: newInstructions,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                document.getElementById("editModal").style.display = "none";
+                fetchRecipes();
+            })
+            .catch(error => console.error("Error editing recipe figure it out! :)", error));
+        };
+    
     // Function to delete a recipe by ID
     window.deleteRecipe = function(recipeId) {
         fetch(`http://127.0.0.1:5000/delete_recipe/${recipeId}`, { method: "DELETE" })
@@ -79,30 +126,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 fetchRecipes(); // Refresh the recipe list after deletion
             })
             .catch(error => console.error("Error deleting recipe:", error));
-    }
-
-    window.editRecipe = function editRecipe(recipeId) {
-        const newTitle = prompt("Enter new title:");
-        const newIngredients = prompt("Enter new ingredients:");
-        const newInstructions = prompt("Enter new instructions:");
-        if (!newTitle || !newIngredients || !newInstructions) return;
-    
-        fetch(`http://127.0.0.1:5000/edit_recipe/${recipeId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-                title: newTitle, 
-                ingredients: newIngredients, 
-                instructions: newInstructions 
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message);
-            fetchRecipes();
-        })
-        .catch(error => console.error("Error editing recipe:", error));
-    }
-
+    };
     fetchRecipes(); 
 });

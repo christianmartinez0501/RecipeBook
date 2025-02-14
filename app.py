@@ -92,26 +92,26 @@ def delete_recipe(recipe_id):
     return jsonify({"message": "Recipe deleted successfully"}), 200
 
 # Update an existing recipe
-@app.route('/update_recipe/<int:recipe_id>', methods=['PUT'])
-def update_recipe(recipe_id):
-    data = request.get_json()  # Get JSON data from the request
+@app.route('/edit_recipe/<int:recipe_id>', methods=['PUT'])
+def edit_recipe(recipe_id):
+    data = request.get_json()
 
     title = data.get("title")
     ingredients = data.get("ingredients")
     instructions = data.get("instructions")
 
     if not title or not ingredients or not instructions:
-        return jsonify({"message": "All fields are required!"}), 400
-
+        return jsonify({"message":"All fields are required"}), 400
+    
     with sqlite3.connect(DATABASE) as conn:
         cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE recipes SET title=?, ingredients=?, instructions=? WHERE id=?",
-            (title, ingredients, instructions, recipe_id)
-        )
+        cursor.execute("UPDATE recipes SET title=?, ingredients=?, instructions=? WHERE id=?",
+                       (title, ingredients, instructions)
+                       )
         conn.commit()
+    
+    return jsonify({"message":"Recipe updated successfully!!!!!"})
 
-    return jsonify({"message": "Recipe updated successfully!"})
 
 if __name__ == "__main__":
     app.run(debug=True)
