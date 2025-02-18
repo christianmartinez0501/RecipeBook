@@ -99,6 +99,28 @@ def get_recipe(recipe_id):
         return jsonify({"message":"Recipe not found"}), 404
     return jsonify(recipe_list[0])
 
+# Route to update a recipe
+@app.route('/update_recipe/<int:recipe_id>', methods=['PUT'])  # Allow OPTIONS requests
+def update_recipe(recipe_id):
+
+    data = request.get_json()
+
+    title = data.get("title")
+    ingredients = data.get("ingredients")
+    instructions = data.get("instructions")
+
+    if not title or not ingredients or not instructions:
+        return jsonify({"message": "All fields are required"}), 400
+
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE recipes SET title=?, ingredients=?, instructions=? WHERE id=?",
+                       (title, ingredients, instructions, recipe_id))
+        conn.commit()
+
+    response = jsonify({"message": "Recipe updated successfully"})
+    return response, 200
+
 # Route to serve images
 @app.route('/uploads/<filename>')
 def get_image(filename):
