@@ -1,132 +1,195 @@
 document.addEventListener("DOMContentLoaded", function () {
+    const BASE_URL = "http://127.0.0.1:5000";
     const recipeForm = document.getElementById("recipeForm");
+    const recipeList = document.getElementById("recipeList");
+    const editModal = document.getElementById("editModal");
+    const closeModalButton = document.querySelector(".close");
+    const saveEditButton = document.getElementById("saveEdit");
 
-    // Handle the form submission
-    recipeForm.addEventListener("submit", function (event) {
-        event.preventDefault(); // Prevent default form submission
+    // Handle form submission
+    recipeForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
 
-        // Get form data, including the image file
         const formData = new FormData(recipeForm);
 
-        // Send data to the Flask backend
-        fetch("http://127.0.0.1:5000/add_recipe", {
-            method: "POST",
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message); // Show success message
-            recipeForm.reset(); // Clear the form
-            fetchRecipes(); // Refresh the recipe list
-        })
-        .catch(error => console.error("Error:", error));
+        try {
+            const response = await fetch(`${BASE_URL}/add_recipe`, {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            alert(data.message);
+            recipeForm.reset();
+            await fetchRecipes();
+        } catch (error) {
+            console.error("Error:", error);
+        }
     });
 
-    // Fetch and display saved recipes
-    function fetchRecipes() {
-        fetch("http://127.0.0.1:5000/get_recipes")
-            .then(response => response.json())
-            .then(data => {
-                const recipeList = document.getElementById("recipeList");
-                recipeList.innerHTML = ""; 
-        
-                data.forEach(recipe => {
-                    const recipeItem = document.createElement("div");
-                    recipeItem.classList.add("recipe-card");
-                    recipeItem.innerHTML = `
-                        <div class="menu-container">
-                            <button class="menu-button">⋮</button>
-                            <div class="menu-options">
-                                <button onclick="editRecipe(${recipe.id})">Edit</button>
-                                <button onclick="deleteRecipe(${recipe.id})">Delete</button>
-                            </div>
-                        </div>
-                        <h3>${recipe.title}</h3>
-                        <p><strong>Ingredients:</strong> ${recipe.ingredients}</p>
-                        <p><strong>Instructions:</strong> ${recipe.instructions}</p>
-                        ${recipe.image ? `<img src="http://127.0.0.1:5000/uploads/${recipe.image}" width="150">` : ""}
-                    `;
-    
-                    recipeList.appendChild(recipeItem);
-                });
-    
-                // Add event listeners for toggling menu
-                document.querySelectorAll(".menu-button").forEach(button => {
-                    button.addEventListener("click", function () {
-                        const menu = this.nextElementSibling;
-                        menu.style.display = menu.style.display === "block" ? "none" : "block";
-                    });
-                });
-    
-                // Close menu if clicked outside
-                document.addEventListener("click", function (event) {
-                    document.querySelectorAll(".menu-options").forEach(menu => {
-                        if (!menu.parentElement.contains(event.target)) {
-                            menu.style.display = "none";
-                        }
-                    });
-                });
-            })
-            .catch(error => console.error("Error fetching recipes:", error));
+    // Fetch and display recipes
+    async function fetchRecipes() {
+        try {
+            const response = await fetch(`${BASE_URL}/get_recipes`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            recipeList.innerHTML = "";
+
+            data.forEach(recipe => {
+                const recipeItem = document.createElement("div");
+                recipeItem.innerHTML = createRecipeCard(recipe);
+                recipeList.appendChild(recipeItem);
+            });
+
+            attachMenuListeners();
+        } catch (error) {
+            console.error("Error fetching recipes:", error);
+        }
     }
 
-        // Function to edit a recipe by ID
-        window.editRecipe = function editRecipe(recipeId, title, ingredients, instructions) {
-            // console.log("Opening edit modal for Recipe ID:", recipeId); 
-            const modal = document.getElementById("editModal");
+    // Create recipe card HTML
+    function createRecipeCard(recipe) {
+        return `
+            <div class="recipe-card">
+                <div class="menu-container">
+                    <button class="menu-button">⋮</button>
+                    <div class="menu-options">
+                        <button class="edit-button" data-recipe-id="${recipe.id}">Edit</button>
+                        <button class="delete-button" data-recipe-id="${recipe.id}">Delete</button>
+                    </div>
+                </div>
+                <h3>${recipe.title}</h3>
+                <p><strong>Ingredients:</strong> ${recipe.ingredients}</p>
+                <p><strong>Instructions:</strong> ${recipe.instructions}</p>
+                ${recipe.image ? `<img src="${BASE_URL}/uploads/${recipe.image}" width="150">` : ""}
+            </div>
+        `;
+    }
 
-            document.getElementById("editTitle").style.value = title;
-            document.getElementById("editIngredients").style.value = ingredients;
-            document.getElementById("editInstructions").style.value = instructions;
-            currentRecipeId = recipeId;
+    // Attach event listeners to menu buttons
+    function attachMenuListeners() {
+        document.querySelectorAll(".menu-button").forEach(button => {
+            button.addEventListener("click", function () {
+                const menu = this.nextElementSibling;
+                menu.style.display = menu.style.display === "block" ? "none" : "block";
+            });
+        });
 
-            
-            modal.style.display = "block"; // Make modal visible
-        };
-            
-        // Open edit modal with recipe data
-        document.querySelector(".close").click = function () {
-            document.getElementById("editModal").style.display = "none"
-        };
-    
-        // Save edited recipe
-        document.getElementById("saveEdit").onclick = function () {
-            const newTitle = document.getElementById("editTitle").value;
-            const newIngredients = document.getElementById("editIngredients").value;
-            const newInstructions = document.getElementById("editInstructions").value;
-    
-            fetch(`http://127.0.0.1:5000/edit_recipe/${recipeID}`, {
+        document.querySelectorAll(".edit-button").forEach(button => {
+            button.addEventListener("click", function () {
+                const recipeId = this.dataset.recipeId;
+                editRecipe(recipeId);
+            });
+        });
+
+        document.querySelectorAll(".delete-button").forEach(button => {
+            button.addEventListener("click", function () {
+                const recipeId = this.dataset.recipeId;
+                deleteRecipe(recipeId);
+            });
+        });
+    }
+
+    // Edit recipe
+    async function editRecipe(recipeId) {
+        try {
+            const response = await fetch(`${BASE_URL}/get_recipe/${recipeId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const recipe = await response.json();
+            document.getElementById("editTitle").value = recipe.title;
+            document.getElementById("editIngredients").value = recipe.ingredients;
+            document.getElementById("editInstructions").value = recipe.instructions;
+            document.getElementById("editRecipeId").value = recipeId;
+
+            // Close all open menus
+            document.querySelectorAll(".menu-options").forEach(menu => {
+                menu.style.display = "none";
+            });
+
+            // Show the edit modal
+            editModal.style.display = "block";
+        } catch (error) {
+            console.error("Error fetching recipe for editing:", error);
+        }
+    }
+
+    // Save edited recipe
+    saveEditButton.addEventListener("click", async function () {
+        const recipeId = document.getElementById("editRecipeId").value;
+        const newTitle = document.getElementById("editTitle").value;
+        const newIngredients = document.getElementById("editIngredients").value;
+        const newInstructions = document.getElementById("editInstructions").value;
+
+        try {
+            const response = await fetch(`${BASE_URL}/update_recipe/${recipeId}`, {
                 method: "PUT",
-                headers: { "Content-Type": "application/json"},
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     title: newTitle,
                     ingredients: newIngredients,
                     instructions: newInstructions,
                 }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message);
-                closeEditModal();
-                fetchRecipes();
-            })
-            .catch(error => console.error("Error editing recipe figure it out! :)", error));
-        };
-    
-    // Function to delete a recipe by ID
-    window.deleteRecipe = function(recipeId) {
-        fetch(`http://127.0.0.1:5000/delete_recipe/${recipeId}`, { method: "DELETE" })
-            .then(response => response.json())
-            .then(data => {
-                console.log(data.message); // Log the message from the backend
-                fetchRecipes(); // Refresh the recipe list after deletion
-            })
-            .catch(error => console.error("Error deleting recipe:", error));
-    };
-    // Close modal function
-    window.closeEditModal = function() {
-        document.getElementById("editModal").style.display = "none";
-    };
-    fetchRecipes(); 
-});
+            });
 
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            alert(data.message);
+            closeEditModal();
+            await fetchRecipes();
+        } catch (error) {
+            console.error("Error updating recipe:", error);
+        }
+    });
+
+    // Delete recipe
+    async function deleteRecipe(recipeId) {
+        try {
+            const response = await fetch(`${BASE_URL}/delete_recipe/${recipeId}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log(data.message);
+            await fetchRecipes();
+        } catch (error) {
+            console.error("Error deleting recipe:", error);
+        }
+    }
+
+    // Close edit modal
+    function closeEditModal() {
+        editModal.style.display = "none";
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener("click", function (event) {
+        document.querySelectorAll(".menu-options").forEach(menu => {
+            if (!menu.parentElement.contains(event.target)) {
+                menu.style.display = "none";
+            }
+        });
+    });
+
+    // Close modal when clicking the close button
+    closeModalButton.addEventListener("click", closeEditModal);
+
+    // Initial fetch of recipes
+    fetchRecipes();
+});

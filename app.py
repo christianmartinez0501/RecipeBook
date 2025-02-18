@@ -62,20 +62,42 @@ def add_recipe():
 
     return jsonify({"message": "Recipe added successfully"}), 201
 
+def fetch_recipes_from_db(recipe_id=None):
+    """
+    Fetches recipes from the database.
+    If recipe_id is provided, fetches a single recipe; otherwise, fetches all recipes.
+    """
+    query = "SELECT id, title, ingredients, instructions, image FROM recipes"
+    args = ()
+
+    if recipe_id:
+        query += " WHERE id = ?"
+        args = (recipe_id,)
+
+    with sqlite3.connect(DATABASE) as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, args)
+        recipes = cursor.fetchall()
+
+    return [
+        {"id": row[0], "title": row[1], "ingredients": row[2], "instructions": row[3], "image": row[4]}
+        for row in recipes
+    ]
+
 # Route to fetch all recipes
 @app.route('/get_recipes', methods=['GET'])
 def get_recipes():
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, title, ingredients, instructions, image FROM recipes")
-        recipes = cursor.fetchall()
-
-    recipes_list = [
-        {"id": row[0], "title": row[1], "ingredients": row[2], "instructions": row[3], "image": row[4]} 
-        for row in recipes
-    ]
     
-    return jsonify(recipes_list)
+    recipe_list = fetch_recipes_from_db()
+    return jsonify(recipe_list)
+
+# Route to fetch a single recipe
+@app.route('/get_recipe/<int:recipe_id>', methods=['GET'])
+def get_recipe(recipe_id):
+    recipe_list = fetch_recipes_from_db(recipe_id)
+    if not recipe_list:
+        return jsonify({"message":"Recipe not found"}), 404
+    return jsonify(recipe_list[0])
 
 # Route to serve images
 @app.route('/uploads/<filename>')
@@ -90,28 +112,6 @@ def delete_recipe(recipe_id):
         cursor.execute("DELETE FROM recipes WHERE id = ?", (recipe_id,))
         conn.commit()
     return jsonify({"message": "Recipe deleted successfully"}), 200
-
-# Update an existing recipe
-@app.route('/edit_recipe/<int:recipe_id>', methods=['PUT'])
-def edit_recipe(recipe_id):
-    data = request.get_json()
-
-    title = data.get("title")
-    ingredients = data.get("ingredients")
-    instructions = data.get("instructions")
-
-    if not title or not ingredients or not instructions:
-        return jsonify({"message":"All fields are required"}), 400
-    
-    with sqlite3.connect(DATABASE) as conn:
-        cursor = conn.cursor()
-        cursor.execute("UPDATE recipes SET title=?, ingredients=?, instructions=? WHERE id=?",
-                       (title, ingredients, instructions)
-                       )
-        conn.commit()
-    
-    return jsonify({"message":"Recipe updated successfully!!!!!"})
-
 
 if __name__ == "__main__":
     app.run(debug=True)
