@@ -7,6 +7,19 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <header>
+        <button id="login-btn" class="login-button" onclick="toggleLogin()">Login</button>
+    </header>
+
+    <div id="login-container" class="hidden">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <button onclick="register()">Register</button>
+        <button onclick="logOut()">Logout</button>
+    </div>
+
     <div class="container">
         <h1>Recipe Book</h1>
         <form id="recipeForm" enctype="multipart/form-data">

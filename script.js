@@ -6,6 +6,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const closeModalButton = document.querySelector(".close");
     const saveEditButton = document.getElementById("saveEdit");
 
+    function toggleLogin() {
+        const loginContainer = document.getElementById("login-container");
+        loginContainer.classList.toggle("hidden");
+    }
+
     // Handle form submission
     recipeForm.addEventListener("submit", async function (event) {
         event.preventDefault();
