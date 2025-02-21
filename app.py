@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template, request, redirect, url_for, session
 from flask_cors import CORS
 import sqlite3
 import os
@@ -15,6 +15,43 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 # Ensure upload folder exists
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
+
+# Mock users
+users = {
+    'user1': 'password1',
+    'user2': 'password2'
+}
+
+def home():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return redirect(url_for('index'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+
+        #Check is username exists and password is correct
+        if username in users and users[username] == password:
+            #Store the username in the session
+            session['username'] = username
+            return redirect(url_for('index'))
+        return "Invalid credentials. Please try again losa"
+    
+    #Render the login [page for get requests
+    return render_template('login.html')
+
+@app.route('/index')
+def index():
+    #Check if user is logged in
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return render_template('index.html', username=session['username'])
+
+
 
 # Create database table
 def create_table():
